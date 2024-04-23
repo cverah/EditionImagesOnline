@@ -28,7 +28,7 @@ const TextControlComponent = ({
   };
 
   return (
-    <div>
+    <div style={{ marginBottom: "10px" }}>
       <label>
         Fuente:
         <select
@@ -38,6 +38,14 @@ const TextControlComponent = ({
           <option value="Arial">Arial</option>
           <option value="Helvetica">Helvetica</option>
           <option value="Times New Roman">Times New Roman</option>
+          <option value="Verdana">Verdana</option>
+          <option value="Georgia">Georgia</option>
+          <option value="Courier New">Courier New</option>
+          <option value="Comic Sans MS">Comic Sans MS</option>
+          <option value="Trebuchet MS">Trebuchet MS</option>
+          <option value="Lucida Sans Unicode">Lucida Sans Unicode</option>
+          <option value="Tahoma">Tahoma</option>
+          <option value="Impact">Impact</option>
           {/* Agrega más opciones según necesites */}
         </select>
       </label>
