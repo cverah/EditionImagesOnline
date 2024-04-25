@@ -6,6 +6,8 @@ import RemoveTextComponent from "./RemoveTextComponent";
 import DownloadImageComponent from "./DownloadImageComponent";
 import SaveCanvasComponent from "./SaveCanvasComponent";
 import TextControlComponent from "./TextControlsComponent";
+import UndoButtonComponent from "./UndoButtonComponent ";
+import RedoButtonComponent from "./RedoButtonComponent ";
 
 const ImageTextEditor = ({ images }) => {
   const { id } = useParams();
@@ -23,18 +25,51 @@ const ImageTextEditor = ({ images }) => {
       instance.setHeight(600);
       instance.setWidth(1000);
 
+      // Inicializar las pilas aquí
+      instance.undoStack = [];
+      instance.redoStack = [];
+
+      // Define funciones de deshacer y rehacer
+      instance.undo = function () {
+        if (this.undoStack.length > 0) {
+          const lastAction = this.undoStack.pop();
+          this.redoStack.push(lastAction);
+          requestAnimationFrame(() => {
+            this.loadFromJSON(lastAction, this.renderAll.bind(this));
+          });
+        }
+      };
+
+      instance.redo = function () {
+        if (this.redoStack.length > 0) {
+          const nextAction = this.redoStack.pop();
+          this.undoStack.push(nextAction);
+          requestAnimationFrame(() => {
+            this.loadFromJSON(nextAction, this.renderAll.bind(this));
+          });
+        }
+      };
+
+      // Añade el estado inicial al undoStack después de definir `undo` y `redo`
       if (localStorage.getItem(`canvasState-${id}`)) {
-        instance.loadFromJSON(
-          localStorage.getItem(`canvasState-${id}`),
-          instance.renderAll.bind(instance)
-        );
+        instance.loadFromJSON(localStorage.getItem(`canvasState-${id}`), () => {
+          instance.renderAll.bind(instance);
+          instance.undoStack.push(instance.toJSON()); // Guardar estado inicial
+        });
       } else {
         fabric.Image.fromURL(imageUrl, (img) => {
           img.scaleToWidth(1000);
           img.scaleToHeight(600);
-          instance.setBackgroundImage(img, instance.renderAll.bind(instance));
+          instance.setBackgroundImage(img, () => {
+            instance.renderAll.bind(instance);
+            instance.undoStack.push(instance.toJSON()); // Guardar estado inicial
+          });
         });
       }
+
+      instance.on("object:modified", function () {
+        this.undoStack.push(this.toJSON());
+      });
 
       instance.on("selection:created", (e) => {
         setIsTextSelected(
@@ -90,6 +125,8 @@ const ImageTextEditor = ({ images }) => {
           navigate={navigate}
           id={id}
         />
+        <UndoButtonComponent canvasInstance={canvasInstance} />
+        <RedoButtonComponent canvasInstance={canvasInstance} />
       </div>
     </div>
   );
