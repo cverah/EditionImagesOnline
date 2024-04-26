@@ -21,6 +21,7 @@ const ImageTextEditor = ({ images }) => {
 
   useEffect(() => {
     if (canvasRef.current && !canvasInstance.current) {
+      // console.log("igreso a if de canvas");
       const instance = new fabric.Canvas(canvasRef.current);
       instance.setHeight(600);
       instance.setWidth(1000);
@@ -51,9 +52,12 @@ const ImageTextEditor = ({ images }) => {
       };
 
       // Añade el estado inicial al undoStack después de definir `undo` y `redo`
-      if (localStorage.getItem(`canvasState-${id}`)) {
-        console.log("ingreso a if");
+      const savedState = localStorage.getItem(`canvasState-${id}`);
+      if (savedState) {
+        // console.log("ingreso a if de saved state");
+
         instance.loadFromJSON(localStorage.getItem(`canvasState-${id}`), () => {
+          instance.renderAll();
           instance.forEachObject(function (obj) {
             if (obj.type === "i-text") {
               // Restablece propiedades que pueden no ser cargadas automáticamente
@@ -70,13 +74,17 @@ const ImageTextEditor = ({ images }) => {
         });
       } else {
         // ingreso a else
+
         fabric.Image.fromURL(imageUrl, (img) => {
           img.scaleToWidth(1000);
           img.scaleToHeight(600);
-          instance.setBackgroundImage(img, () => {
-            instance.renderAll.bind(instance);
-            instance.undoStack.push(instance.toJSON()); // Guardar estado inicial
-          });
+          instance.setBackgroundImage(img, instance.renderAll.bind(instance));
+          // Agregar esta línea puede ayudar a confirmar que el estado se guarda inmediatamente después de establecer la imagen de fondo.
+          localStorage.setItem(
+            `canvasState-${id}`,
+            JSON.stringify(instance.toJSON())
+          );
+          instance.undoStack.push(instance.toJSON());
         });
       }
 
