@@ -12,19 +12,34 @@ const AddTextComponent = ({ canvasInstance, fontFamily, fontSize }) => {
       fill: "#fff",
       stroke: "#000",
       strokeWidth: 1,
-      fontSize,
-      editingBorderColor: "#000000",
+      fontSize: 35,
+      editingBorderColor: "rgb(179, 204, 254)",
+      borderColor: "rgb(179, 204, 254)",
+      borderScaleFactor: 2,
+      padding: 4,
     });
 
     text.on("editing:entered", function () {
       this.selectAll();
       this.removeChars();
+      this.set({
+        borderColor: "rgb(179, 204, 254)",
+        borderScaleFactor: 2,
+        padding: 4,
+      });
     });
 
     text.on("editing:exited", function () {
       if (this.text.trim() === "") {
         this.text = "Escribe aquí...";
       }
+
+      this.set({
+        borderColor: "rgb(179, 204, 254)",
+        borderScaleFactor: 2,
+        padding: 4,
+      });
+
       instance.renderAll();
     });
 

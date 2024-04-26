@@ -52,11 +52,24 @@ const ImageTextEditor = ({ images }) => {
 
       // Añade el estado inicial al undoStack después de definir `undo` y `redo`
       if (localStorage.getItem(`canvasState-${id}`)) {
+        console.log("ingreso a if");
         instance.loadFromJSON(localStorage.getItem(`canvasState-${id}`), () => {
+          instance.forEachObject(function (obj) {
+            if (obj.type === "i-text") {
+              // Restablece propiedades que pueden no ser cargadas automáticamente
+              obj.set({
+                borderColor: "rgb(179, 204, 254)", // Asegúrate de que esta línea refleje el color actual deseado
+                borderScaleFactor: 2,
+                padding: 4,
+              });
+            }
+          });
+
           instance.renderAll.bind(instance);
           instance.undoStack.push(instance.toJSON()); // Guardar estado inicial
         });
       } else {
+        // ingreso a else
         fabric.Image.fromURL(imageUrl, (img) => {
           img.scaleToWidth(1000);
           img.scaleToHeight(600);
@@ -68,6 +81,11 @@ const ImageTextEditor = ({ images }) => {
       }
 
       instance.on("object:modified", function () {
+        const canvasState = JSON.stringify(
+          instance.toJSON(["borderColor", "borderScaleFactor", "padding"])
+        ); // Incluye propiedades adicionales si es necesario
+        localStorage.setItem(`canvasState-${id}`, canvasState);
+
         this.undoStack.push(this.toJSON());
       });
 
