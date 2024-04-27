@@ -20,11 +20,42 @@ const ImageTextEditor = ({ images }) => {
   const [fontSize, setFontSize] = useState(24);
 
   useEffect(() => {
+    const setCanvasDimensions = (instance, img) => {
+      const originalWidth = img.width;
+      const originalHeight = img.height;
+
+      const windowWidth = window.innerWidth;
+      const scaleFactor =
+        windowWidth < originalWidth ? windowWidth / originalWidth : 1;
+      const scaledWidth = originalWidth * scaleFactor;
+      const scaledHeight = originalHeight * scaleFactor;
+
+      instance.setWidth(scaledWidth);
+      instance.setHeight(scaledHeight);
+      instance.calcOffset();
+
+      img.set({
+        scaleX: scaleFactor,
+        scaleY: scaleFactor,
+        originX: "left",
+        originY: "top",
+      });
+
+      instance.setBackgroundImage(img, instance.renderAll.bind(instance));
+      instance.renderAll();
+    };
+
     if (canvasRef.current && !canvasInstance.current) {
+      // const canvas = new fabric.Canvas(canvasRef.current);
       // console.log("igreso a if de canvas");
       const instance = new fabric.Canvas(canvasRef.current);
-      instance.setHeight(600);
-      instance.setWidth(1000);
+      fabric.Image.fromURL(imageUrl, (img) => {
+        setCanvasDimensions(instance, img);
+
+        window.addEventListener("resize", () =>
+          setCanvasDimensions(instance, img)
+        );
+      });
 
       // Inicializar las pilas aquí
       instance.undoStack = [];
@@ -121,6 +152,20 @@ const ImageTextEditor = ({ images }) => {
       });
 
       canvasInstance.current = instance;
+      return () => {
+        // Limpiar el evento de redimensionamiento al desmontar el componente
+        window.removeEventListener("resize", () => {
+          if (
+            canvasInstance.current &&
+            canvasInstance.current.backgroundImage
+          ) {
+            setCanvasDimensions(
+              canvasInstance.current,
+              canvasInstance.current.backgroundImage
+            );
+          }
+        });
+      };
     }
   }, [id, imageUrl]);
 
@@ -137,7 +182,7 @@ const ImageTextEditor = ({ images }) => {
           />
         )}
       </div>
-      <canvas ref={canvasRef} id="canvas" width={1000} height={600} />
+      <canvas ref={canvasRef} id="canvas" />
       <div>
         <AddTextComponent
           canvasInstance={canvasInstance}
